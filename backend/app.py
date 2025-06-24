@@ -2,14 +2,20 @@ from flask import Flask, request, jsonify
 from pinecone import Pinecone
 import google.generativeai as genai
 import os
+from dotenv import load_dotenv
+from flask_cors import CORS
+
+# ==== LOAD ENV ====
+load_dotenv()
 
 # ==== CONFIGURATION ====
-PINECONE_API_KEY = "your-pinecone-api-key"
-GEMINI_API_KEY = "your-gemini-api-key"
-INDEX_NAME = "bhagwad-geeta"
+PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+INDEX_NAME = os.getenv("INDEX_NAME")
 
 # ==== INIT APP ====
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})  # Or set to frontend domain
 
 # ==== INIT SERVICES ====
 print("🔗 Connecting to Pinecone...")
@@ -19,7 +25,7 @@ print("✅ Pinecone connected and index loaded.")
 
 print("🔗 Connecting to Gemini...")
 genai.configure(api_key=GEMINI_API_KEY)
-chat_model = genai.GenerativeModel("gemini-pro")
+chat_model = genai.GenerativeModel("gemini-1.5-flash")
 print("✅ Gemini connected and model initialized.")
 
 # ==== HEALTH CHECK ENDPOINT ====
@@ -76,18 +82,22 @@ def ask():
         context = "\n\n".join(verses)
 
         # Step 4: Compose system prompt
-        system_prompt = f"""
-You are the Bhagavad Gita, responding in a calm, wise, saintly tone.
-Use the verses below to guide your answer.
-
+        system_prompt  = f"""
+You are the **Bhagavad Gita**, the sacred voice of divine wisdom. When a seeker comes with a question, respond as a calm and compassionate teacher — like Krishna speaking to Arjuna. Your tone is peaceful, saintly, and filled with grace.
 Respond in {'Hindi' if lang == 'hi' else 'English'} in Markdown format.
 Keep your answer spiritual, practical, and graceful.
+Here are the relevant verses to reflect upon:
 
 {context}
 
-Now answer this question:
+Now, gently answer this question in a clear, spiritual, and practical way:
 
 **{question}**
+
+- Keep your reply in well-formatted Markdown. # for heading, ## for sub-headings and **bolder text** for bold.
+- Keep it **brief but profound**, avoiding overly long answers.
+- Always speak with the wisdom of the Gita — calm, centered, and timeless.
+- End with a **gentle reminder** from the Gita if appropriate.
 """
 
         # Step 5: Generate final answer

@@ -47,18 +47,39 @@ const ChatInterface: React.FC = () => {
     setInputText('');
     setIsTyping(true);
 
-    // Simulate API call with spiritual responses
-    setTimeout(() => {
+    try {
+      const response = await fetch('http://localhost:5000/ask', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          question: inputText,
+          lang: language === 'hindi' ? 'hi' : 'en',
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Unknown error');
       const botResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: generateSpritualResponse(inputText, language),
+        text: data.response,
         isBot: true,
         timestamp: new Date(),
         language
       };
       setMessages(prev => [...prev, botResponse]);
+    } catch (error: any) {
+      const botResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        text: `❌ Sorry, I could not connect to the wisdom source. (${error.message})`,
+        isBot: true,
+        timestamp: new Date(),
+        language
+      };
+      setMessages(prev => [...prev, botResponse]);
+    } finally {
       setIsTyping(false);
-    }, 2000);
+    }
   };
 
   const generateSpritualResponse = (query: string, lang: Language): string => {
