@@ -50,7 +50,7 @@ python app.py
 
 ## 🌍 Deployment
 This project is hosted using:
-- **Frontend:** Vercel (https://sarathi-ai-swart.vercel.app)
+- **Frontend:** Vercel - [Sarathi](https://sarathi-krishna.vercel.app/)
 - **Backend:** Render - To deploy your own version, update environment variables and deploy with your preferred platforms.
 
 ## 🙏 How to Use
@@ -72,3 +72,7 @@ This project is hosted using:
 
 > _“You have the right to perform your actions, but not the fruits of them.”_  
 > — Bhagavad Gita 2.47
+
+---
+
+Made with ❤️ by Vrajesh Sharma
