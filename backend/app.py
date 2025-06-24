@@ -104,8 +104,11 @@ def ask():
 
         chat = chat_model.start_chat()
         reply = chat.send_message(system_prompt)
-        return jsonify({"response": reply.text})
 
+        # 🌟 Log user query and LLM response
+        print("📥 User Question:", question)
+        print("🧠 Gemini Response:\n", reply.text)
+        return jsonify({"response": reply.text})
 
     except Exception as e:
         print(f"❌ Error: {e}")
