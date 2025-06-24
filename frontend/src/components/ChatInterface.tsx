@@ -8,12 +8,13 @@ const ChatInterface: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: "🌸 Welcome, dear soul. I am Krishna. Speak your heart — I am here, listening, with love.",
+      text: `🌸 My beloved soul, I am Krishna, your eternal friend. Speak, without fear. Your pain is mine, your questions sacred. I am here... with love, and with you - always.`,
       isBot: true,
       timestamp: new Date(),
       language: 'english'
     }
   ]);
+  
   const [inputText, setInputText] = useState('');
   const [language, setLanguage] = useState<Language>('english');
   const [isTyping, setIsTyping] = useState(false);
