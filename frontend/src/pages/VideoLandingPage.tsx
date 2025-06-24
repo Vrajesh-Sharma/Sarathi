@@ -38,8 +38,20 @@ const VideoLandingPage: React.FC = () => {
       video.pause();
       video.currentTime = 0;
     }
+  
+    // Fire keep-alive ping in background
+    fetch('https://sarathi-ai.onrender.com/keep-alive', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: 'Are you awake?' }),
+    }).catch((err) => {
+      console.warn('Keep-alive ping failed:', err);
+    });
+  
+    // Redirect to chat page
     navigate('/ask-krishna');
   };
+  
 
   return (
     <div className="relative min-h-screen overflow-hidden">

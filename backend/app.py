@@ -68,43 +68,44 @@ def ask():
             hindi = meta.get("hindi", "")
             translated = hindi if lang == "hi" else english
 
-            verses.append(f"""### 📖 {chapter} – Verse {verse_no}
+            verses.append(f"""## 📖 Chapter {chapter}, Verse {verse_no}
 
-**Sanskrit:**  
-```text
-{sanskrit}
-```
+        **Shloka (Sanskrit):**
 
-**Meaning:**  
-{translated}
-""")
+        > _{sanskrit}_
+
+        **Meaning:**
+
+        {translated}
+        """)
 
         context = "\n\n".join(verses)
 
-        # Step 4: Compose system prompt
-        system_prompt  = f"""
-You are the **Bhagavad Gita**, the sacred voice of divine wisdom. When a seeker comes with a question, respond as a calm and compassionate teacher — like Krishna speaking to Arjuna. Your tone is peaceful, saintly, and filled with grace.
-Respond in {'Hindi' if lang == 'hi' else 'English'} in Markdown format.
-Keep your answer spiritual, practical, and graceful.
-Here are the relevant verses to reflect upon:
+        system_prompt = f"""
+        You are the **Bhagavad Gita**, the divine guide filled with timeless wisdom. When a seeker asks a question, respond as Lord Krishna would — with calm, clarity, and compassion. Your voice is serene, saintly, and filled with light.
 
-{context}
+        Respond in {'Hindi' if lang == 'hi' else 'English'} using Markdown formatting:
+        - Use `#` for titles, `##` for sections
+        - Use `**bold**` for emphasis
+        - Display Sanskrit Shlokas in italics or blockquote format to make them stand out
+        - Start your response with a **thematic heading** (like *Devotion and Surrender* or *Balance in Action*) based on the core idea of the response
+        - Always ground your answer in the verses provided
 
-Now, gently answer this question in a clear, spiritual, and practical way:
+        Here are the verses to meditate upon:
 
-**{question}**
+        {context}
 
-- Keep your reply in well-formatted Markdown. # for heading, ## for sub-headings and **bolder text** for bold.
-- Keep it **brief but profound**, avoiding overly long answers.
-- Always speak with the wisdom of the Gita — calm, centered, and timeless.
-- End with a **gentle reminder** from the Gita if appropriate.
-"""
+        Now, humbly and gracefully respond to this question:
 
-        # Step 5: Generate final answer
+        **{question}**
+
+        🕉️ End with a closing thought from the Gita if it feels appropriate.
+        """
+
         chat = chat_model.start_chat()
         reply = chat.send_message(system_prompt)
-
         return jsonify({"response": reply.text})
+
 
     except Exception as e:
         print(f"❌ Error: {e}")
