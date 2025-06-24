@@ -93,31 +93,31 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
           }`}>
             <ReactMarkdown
               components={{
+                h1: ({ children }) => (
+                  <h1 className="text-3xl font-extrabold text-black mb-4">{children}</h1>
+                ),
+                h2: ({ children }) => (
+                  <h2 className="text-2xl font-bold text-black mb-3">{children}</h2>
+                ),
                 p: ({ children }) => (
-                  <p className={`mb-3 leading-relaxed ${
-                    message.isBot ? 'text-purple-800' : 'text-blue-800'
-                  } font-inter`}>
-                    {children}
-                  </p>
+                  <p className="mb-3 leading-relaxed text-gray-800 font-inter">{children}</p>
                 ),
                 strong: ({ children }) => (
-                  <strong className={`font-semibold ${
-                    message.isBot ? 'text-saffron-700' : 'text-blue-700'
-                  } font-devanagari`}>
-                    {children}
-                  </strong>
+                  <strong className="text-orange-600 font-semibold">{children}</strong>
                 ),
                 em: ({ children }) => (
-                  <em className={`italic font-devanagari text-lg leading-relaxed ${
-                    message.isBot ? 'text-purple-700' : 'text-blue-700'
-                  }`}>
+                  <strong className="text-orange-600 font-semibold">{children}</strong> // remove italic effect
+                ),
+                blockquote: ({ children }) => (
+                  <blockquote className="border-l-4 border-saffron-500 pl-4 italic text-gray-700 my-3">
                     {children}
-                  </em>
+                  </blockquote>
                 ),
               }}
             >
               {message.text}
             </ReactMarkdown>
+
           </div>
 
           {/* Actions: Timestamp + Speak */}
