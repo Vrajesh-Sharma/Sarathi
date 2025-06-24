@@ -48,7 +48,7 @@ const ChatInterface: React.FC = () => {
     setIsTyping(true);
 
     try {
-      const response = await fetch('http://localhost:5000/ask', {
+      const response = await fetch('https://sarathi-ai.onrender.com/ask', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
