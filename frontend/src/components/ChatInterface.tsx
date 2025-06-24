@@ -8,7 +8,7 @@ const ChatInterface: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: "🙏 Namaste! I am your spiritual guide, here to share the eternal wisdom of the Bhagavad Gita. What troubles your mind today, dear seeker?",
+      text: "🌸 Welcome, dear soul. I am Krishna. Speak your heart — I am here, listening, with love.",
       isBot: true,
       timestamp: new Date(),
       language: 'english'
@@ -22,7 +22,6 @@ const ChatInterface: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
-    // Only scroll the chat messages container, not the entire page
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
     }
@@ -71,35 +70,15 @@ const ChatInterface: React.FC = () => {
     } catch (error: any) {
       const botResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: `❌ Sorry, I could not connect to the wisdom source. (${error.message})`,
+        text: `❌ Sorry, I could not connect to the wisdom source.\n\n**[Click here to start the server](#start-server)**`,
         isBot: true,
         timestamp: new Date(),
         language
-      };
+      };      
       setMessages(prev => [...prev, botResponse]);
     } finally {
       setIsTyping(false);
     }
-  };
-
-  const generateSpritualResponse = (query: string, lang: Language): string => {
-    const responses = {
-      english: [
-        `**श्रीमद्भगवद्गीता अध्याय 2, श्लोक 47**\n\n*कर्मण्येवाधिकारस्ते मा फलेषु कदाचन।\nमा कर्मफलहेतुर्भूर्मा ते सङ्गोऽस्त्वकर्मणि॥*\n\n**Translation:** You have the right to perform your actions, but you are not entitled to the fruits of action. Never consider yourself the cause of the results of your activities, and never be attached to not doing your duty.\n\n**Guidance:** Focus on your dharma without attachment to outcomes. This brings inner peace and spiritual growth.`,
-        
-        `**श्रीमद्भगवद्गीता अध्याय 6, श्लोक 5**\n\n*उद्धरेदात्मनात्मानं नात्मानमवसादयेत्।\nआत्मैव ह्यात्मनो बन्धुरात्मैव रिपुरात्मनः॥*\n\n**Translation:** One must deliver himself with the help of his mind, and not degrade himself. The mind is the friend of the conditioned soul, and his enemy as well.\n\n**Guidance:** You are your own best friend and worst enemy. Cultivate self-discipline and positive thoughts to elevate your consciousness.`,
-        
-        `**श्रीमद्भगवद्गीता अध्याय 18, श्लोक 66**\n\n*सर्वधर्मान्परित्यज्य मामेकं शरणं व्रज।\nअहं त्वां सर्वपापेभ्यो मोक्षयिष्यामि मा शुचः॥*\n\n**Translation:** Abandon all varieties of religion and just surrender unto Me. I shall deliver you from all sinful reactions. Do not fear.\n\n**Guidance:** Trust in the divine plan. Surrender your ego and attachments, and you will find peace beyond understanding.`
-      ],
-      hindi: [
-        `**श्रीमद्भगवद्गीता अध्याय 2, श्लोक 47**\n\n*कर्मण्येवाधिकारस्ते मा फलेषु कदाचन।\nमा कर्मफलहेतुर्भूर्मा ते सङ्गोऽस्त्वकर्मणि॥*\n\n**अनुवाद:** तुम्हारा अधिकार केवल कर्म पर है, फल पर कभी नहीं। कर्म के फल का कारण मत बनो और कर्म न करने में भी आसक्त मत होओ।\n\n**मार्गदर्शन:** फल की चिंता किए बिना अपने धर्म पर ध्यान दें। इससे आंतरिक शांति और आध्यात्मिक विकास होता है।`,
-        
-        `**श्रीमद्भगवद्गीता अध्याय 6, श्लोक 5**\n\n*उद्धरेदात्मनात्मानं नात्मानमवसादयेत्।\nआत्मैव ह्यात्मनो बन्धुरात्मैव रिपुरात्मनः॥*\n\n**अनुवाद:** मनुष्य को चाहिए कि वह अपने मन की सहायता से अपना उद्धार करे, अपनी अवनति न करे। मन ही जीवात्मा का मित्र है और मन ही उसका शत्रु भी है।\n\n**मार्गदर्शन:** आप अपने सबसे अच्छे मित्र और सबसे बुरे शत्रु दोनों हैं। चेतना को ऊंचा उठाने के लिए आत्म-अनुशासन और सकारात्मक विचारों का विकास करें।`
-      ]
-    };
-
-    const responseList = responses[lang];
-    return responseList[Math.floor(Math.random() * responseList.length)];
   };
 
   const toggleLanguage = () => {
@@ -116,7 +95,6 @@ const ChatInterface: React.FC = () => {
   return (
     <section id="chat" className="min-h-screen bg-gradient-to-br from-cream-50 to-cream-100 py-16">
       <div className="max-w-4xl mx-auto px-6">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -135,7 +113,6 @@ const ChatInterface: React.FC = () => {
           </p>
         </motion.div>
 
-        {/* Language Toggle */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -151,7 +128,6 @@ const ChatInterface: React.FC = () => {
           </button>
         </motion.div>
 
-        {/* Chat Messages - Fixed height container with scroll */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -167,7 +143,7 @@ const ChatInterface: React.FC = () => {
                 <ChatMessage key={message.id} message={message} />
               ))}
             </AnimatePresence>
-            
+
             {isTyping && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -192,7 +168,6 @@ const ChatInterface: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Input Area */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

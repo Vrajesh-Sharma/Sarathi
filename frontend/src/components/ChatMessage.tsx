@@ -93,6 +93,26 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
           }`}>
             <ReactMarkdown
               components={{
+                a: ({ href, children }) => {
+                  if (href === '#start-server') {
+                    return (
+                      <span
+                        onClick={async () => {
+                          try {
+                            await fetch('https://sarathi-ai.onrender.com/keep-alive');
+                            alert('⚙️ Server pinged. Please try again in a minute.');
+                          } catch (err) {
+                            alert('Failed to ping the server.');
+                          }
+                        }}
+                        className="cursor-pointer underline text-orange-600 font-semibold"
+                      >
+                        {children}
+                      </span>
+                    );
+                  }
+                  return <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>;
+                },
                 h1: ({ children }) => (
                   <h1 className="text-3xl font-extrabold text-black mb-4">{children}</h1>
                 ),

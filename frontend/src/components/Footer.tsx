@@ -23,16 +23,6 @@ const Footer: React.FC = () => {
             </cite>
           </div>
 
-          {/* Sanskrit Wisdom */}
-          <div className="mb-12">
-            <p className="font-devanagari text-xl text-saffron-300 mb-2">
-              सत्यमेव जयते
-            </p>
-            <p className="font-inter text-cream-200 opacity-80">
-              "Truth alone triumphs"
-            </p>
-          </div>
-
           {/* Social Links */}
           <div className="flex justify-center gap-6 mb-8">
             {[
