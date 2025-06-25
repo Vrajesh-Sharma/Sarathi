@@ -15,7 +15,7 @@ INDEX_NAME = os.getenv("INDEX_NAME")
 
 # ==== INIT APP ====
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})  # Or set to frontend domain
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # ==== INIT SERVICES ====
 print("🔗 Connecting to Pinecone...")
