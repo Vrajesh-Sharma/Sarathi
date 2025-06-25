@@ -70,7 +70,8 @@ def ask():
             """
             chat = chat_model.start_chat()
             reply = chat.send_message(fallback_prompt)
-
+            print("📥 User Question:", question)
+            print("🧠 Gemini Response:\n", reply.text)
             return jsonify({"response": reply.text})
 
         # Step 3: Build context
