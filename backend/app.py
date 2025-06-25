@@ -56,6 +56,22 @@ def ask():
 
         # Step 2: Query Pinecone
         res = index.query(vector=query_embedding, top_k=5, include_metadata=True)
+        matches = res.get("matches", [])
+        print(f"🔍 Retrieved {len(matches)} relevant context from Pinecone.")
+
+        if not matches or max(m["score"] for m in matches) < 0.75:
+            print("⚠️ No strong context found. Using fallback LLM response.")
+            fallback_prompt = f"""
+            You are Lord Krishna, responding to a seeker with divine grace and wisdom.
+            Answer their question with empathy, spiritual insight, and practical guidance.
+            Respond in {'Hindi' if lang == 'hi' else 'English'}.
+
+            Question: {question}
+            """
+            chat = chat_model.start_chat()
+            reply = chat.send_message(fallback_prompt)
+
+            return jsonify({"response": reply.text})
 
         # Step 3: Build context
         verses = []
@@ -103,7 +119,14 @@ def ask():
         """
 
         chat = chat_model.start_chat()
-        reply = chat.send_message(system_prompt)
+        reply = chat.send_message(
+            system_prompt,
+            generation_config={
+                "temperature": 0.5,
+                "top_p": 0.8,
+                "top_k": 5
+            }
+        )
 
         # 🌟 Log user query and LLM response
         print("📥 User Question:", question)
