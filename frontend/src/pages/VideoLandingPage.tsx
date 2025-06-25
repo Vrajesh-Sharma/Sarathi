@@ -168,12 +168,7 @@ const VideoLandingPage: React.FC = () => {
 
         {/* Audio Control Toggle */}
         {isMuted ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 2.5 }}
-            className="absolute bottom-8 left-8 z-20"
-          >
+          <div className="absolute bottom-8 left-8 z-20">
             <button
               onClick={() => {
                 const video = videoRef.current;
@@ -188,32 +183,23 @@ const VideoLandingPage: React.FC = () => {
             >
               🔊 Enable Sound
             </button>
-          </motion.div>
+          </div>
         ) : (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 2.5 }}
-            className="absolute bottom-8 left-8 z-20"
-          >
+          <div className="absolute bottom-8 left-8 z-20">
             <div className="flex items-center gap-2 px-4 py-2 bg-black/30 backdrop-blur-sm rounded-full border border-white/20">
               <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
               <span className="text-white text-sm font-inter opacity-80">Audio Enabled</span>
             </div>
-          </motion.div>
+          </div>
         )}
 
+
         {/* Volume Hint */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1, delay: 3 }}
-          className="absolute bottom-8 right-8"
-        >
+        <div className="absolute bottom-8 right-8">
           <p className="text-white/60 text-xs font-inter">
             🔊 Adjust your volume for the best experience
           </p>
-        </motion.div>
+        </div>
       </div>
     </div>
   );
