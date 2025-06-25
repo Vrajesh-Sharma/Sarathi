@@ -55,7 +55,7 @@ const Footer: React.FC = () => {
             <div className="flex items-center gap-1">
               <span className="font-inter text-sm">Made with</span>
               <Heart className="w-4 h-4 text-red-400 fill-current" />
-              <span className="font-inter text-sm">for spiritual seekers</span>
+              <span className="font-inter text-sm">by Vrajesh Sharma</span>
             </div>
           </div>
 

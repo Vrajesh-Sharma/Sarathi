@@ -95,45 +95,48 @@ const ChatInterface: React.FC = () => {
 
   return (
     <section id="chat" className="min-h-screen bg-gradient-to-br from-cream-50 to-cream-100 py-16">
-      <div className="max-w-4xl mx-auto px-6">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="text-center mb-12"
+          className="text-center mb-10"
         >
-          <div className="flex items-center justify-center mb-6">
+          <div className="flex flex-wrap items-center justify-center mb-6">
             <Sparkles className="w-8 h-8 text-saffron-500 mr-3" />
-            <h2 className="font-cinzel text-4xl md:text-5xl font-semibold text-purple-800">
+            <h2 className="font-cinzel text-3xl sm:text-4xl md:text-5xl font-semibold text-purple-800">
               Divine Guidance
             </h2>
             <Sparkles className="w-8 h-8 text-saffron-500 ml-3" />
           </div>
-          <p className="font-inter text-lg text-purple-600 max-w-2xl mx-auto leading-relaxed">
+          <p className="font-inter text-base sm:text-lg text-purple-600 max-w-2xl mx-auto leading-relaxed">
             Ask any question about life, dharma, or spiritual growth. Receive wisdom from the eternal teachings of the Bhagavad Gita.
           </p>
         </motion.div>
 
+        {/* Language Toggle */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="flex justify-center mb-8"
+          className="flex justify-center mb-6"
         >
           <button
             onClick={toggleLanguage}
-            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-saffron-500 text-white rounded-full font-inter font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+            className="flex items-center gap-2 px-5 py-2 sm:px-6 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-purple-500 to-saffron-500 text-white rounded-full font-inter font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
           >
             <Globe className="w-5 h-5" />
             {language === 'english' ? 'हिंदी में बदलें' : 'Switch to English'}
           </button>
         </motion.div>
 
+        {/* Chat Container */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.4 }}
-          className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-2xl p-6 mb-6 h-[600px] flex flex-col"
+          className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-2xl p-4 sm:p-6 mb-4 sm:mb-6 h-[65vh] sm:h-[600px] flex flex-col"
         >
           <div 
             ref={messagesContainerRef}
@@ -169,13 +172,14 @@ const ChatInterface: React.FC = () => {
           </div>
         </motion.div>
 
+        {/* Input Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.6 }}
-          className="flex gap-3"
+          className="flex flex-wrap gap-3"
         >
-          <div className="flex-1 relative">
+          <div className="flex-grow w-full sm:w-auto relative">
             <input
               ref={inputRef}
               type="text"
@@ -183,7 +187,7 @@ const ChatInterface: React.FC = () => {
               onChange={(e) => setInputText(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder={language === 'english' ? "Ask for divine guidance..." : "दिव्य मार्गदर्शन के लिए पूछें..."}
-              className="w-full px-6 py-4 bg-white/80 backdrop-blur-sm border-2 border-purple-200 rounded-2xl font-inter text-purple-800 placeholder-purple-400 focus:outline-none focus:border-saffron-400 focus:bg-white transition-all duration-300 shadow-lg"
+              className="w-full px-4 sm:px-6 py-3 sm:py-4 bg-white/80 backdrop-blur-sm border-2 border-purple-200 rounded-2xl font-inter text-purple-800 placeholder-purple-400 focus:outline-none focus:border-saffron-400 focus:bg-white transition-all duration-300 shadow-lg"
             />
           </div>
           <motion.button
@@ -191,11 +195,16 @@ const ChatInterface: React.FC = () => {
             whileTap={{ scale: 0.95 }}
             onClick={handleSendMessage}
             disabled={!inputText.trim() || isTyping}
-            className="px-6 py-4 bg-gradient-to-r from-saffron-500 to-purple-500 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-5 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-saffron-500 to-purple-500 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Send className="w-5 h-5" />
           </motion.button>
         </motion.div>
+
+        {/* Footer */}
+        <p className="text-center text-sm text-gray-500 mt-6 font-inter">
+          Made with ❤️ by <strong>Vrajesh Sharma</strong>
+        </p>
       </div>
     </section>
   );
