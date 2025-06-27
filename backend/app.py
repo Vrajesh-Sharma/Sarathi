@@ -61,10 +61,21 @@ def ask():
 
         # Step 3: Ask Gemini if it's a relevant question to Geeta
         eligibility_prompt = f"""
-        Does the following question align with the teachings, themes, or context of the Bhagavad Gita?
-        Answer only YES or NO.
+        You are evaluating whether the following question is aligned with the spiritual and practical teachings of the Bhagavad Gita.
+
+        Check if it relates to:
+        - Real-life challenges (anger, peace, purpose, fear, karma, dharma)
+        - Inner conflict, morality, life purpose, emotional growth
+        - Situations Arjuna might have faced spiritually
+
+        Avoid questions that are:
+        - Factual, historical, or personal
+        - Not related to inner growth or dharma
+
+        Answer only "YES" or "NO".
 
         Question: {question}
+
         """
         eligibility_chat = chat_model.start_chat()
         eligibility_response = eligibility_chat.send_message(eligibility_prompt)
