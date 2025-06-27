@@ -47,20 +47,32 @@ def ask():
         return jsonify({"error": "No question provided."}), 400
 
     try:
-        # Step 1: Embed question
+        # Step 1: Ask Gemini if the question is Geeta-relevant
+        moderation_prompt = f"""
+        You are a gatekeeper of spiritual knowledge.
+        Determine if the following question is related to the teachings or wisdom of the Bhagavad Gita:
+
+        Question: {question}
+
+        Reply with ONLY "yes" or "no".
+        """
+        relevance_check = chat_model.generate_content(moderation_prompt)
+        is_geeta_related = "yes" in relevance_check.text.lower()
+
+        # Step 2: Embed the question
         query_embedding = genai.embed_content(
             model="models/embedding-001",
             content=question,
             task_type="retrieval_query"
         )["embedding"]
 
-        # Step 2: Query Pinecone
+        # Step 3: Query Pinecone
         res = index.query(vector=query_embedding, top_k=5, include_metadata=True)
         matches = res.get("matches", [])
         print(f"🔍 Retrieved {len(matches)} relevant context from Pinecone.")
 
-        if not matches or max(m["score"] for m in matches) < 0.75:
-            print("⚠️ No strong context found. Using fallback LLM response.")
+        if not is_geeta_related or not matches or max(m["score"] for m in matches) < 0.75:
+            print("⚠️ Not strongly related to Geeta or insufficient context. Using fallback response.")
             fallback_prompt = f"""
             You are Lord Krishna, responding to a seeker with divine grace and wisdom.
             Answer their question with empathy, spiritual insight, and practical guidance.
@@ -69,14 +81,14 @@ def ask():
             Question: {question}
             """
             chat = chat_model.start_chat()
-            reply = chat.send_message(fallback_prompt)
+            reply = chat.send_message(fallback_prompt, generation_config={"temperature": 0.5, "top_p": 0.8, "top_k": 5})
             print("📥 User Question:", question)
             print("🧠 Gemini Response:\n", reply.text)
             return jsonify({"response": reply.text})
 
-        # Step 3: Build context
+        # Step 4: Build context
         verses = []
-        for match in res["matches"]:
+        for match in matches:
             meta = match["metadata"]
             chapter = meta.get("chapter_number", "N/A")
             verse_no = meta.get("verse", "N/A")
@@ -103,9 +115,9 @@ def ask():
 
         Respond in {'Hindi' if lang == 'hi' else 'English'} using Markdown formatting:
         - Use `#` for titles, `##` for sections
-        - Use `**bold**` for emphasis
+        - Use **bold** for emphasis
         - Display Sanskrit Shlokas in italics or blockquote format to make them stand out
-        - Start your response with a **thematic heading** (like *Devotion and Surrender* or *Balance in Action*) based on the core idea of the response
+        - Start your response with a thematic heading (like *Devotion and Surrender* or *Balance in Action*) based on the core idea of the response
         - Always ground your answer in the verses provided
 
         Here are the verses to meditate upon:
@@ -129,7 +141,6 @@ def ask():
             }
         )
 
-        # 🌟 Log user query and LLM response
         print("📥 User Question:", question)
         print("🧠 Gemini Response:\n", reply.text)
         return jsonify({"response": reply.text})
