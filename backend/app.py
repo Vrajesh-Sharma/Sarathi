@@ -60,7 +60,12 @@ def ask():
         matches = res.get("matches", [])
         print(f"🔍 Retrieved {len(matches)} relevant context from Pinecone.")
 
-        if not matches or max(m["score"] for m in matches) < 0.75:
+        # Print scores in one line
+        scores = [round(m["score"], 4) for m in matches]
+        print(f"📊 Scores: {', '.join(map(str, scores))}")
+
+        # New lower threshold
+        if not matches or max(scores) < 0.65:
             print("⚠️ No strong context found. Using fallback response.")
             fallback_prompt = f"""
             You are Lord Krishna, responding to a seeker with divine grace and wisdom.
