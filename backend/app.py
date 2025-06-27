@@ -58,14 +58,15 @@ def ask():
         # Step 2: Query Pinecone
         res = index.query(vector=query_embedding, top_k=5, include_metadata=True)
         matches = res.get("matches", [])
+        print(f"🧠 User Question: {question}")
         print(f"🔍 Retrieved {len(matches)} relevant context from Pinecone.")
 
-        # Print scores in one line
+        # Print similarity scores
         scores = [round(m["score"], 4) for m in matches]
         print(f"📊 Scores: {', '.join(map(str, scores))}")
 
-        # New lower threshold
-        if not matches or max(scores) < 0.65:
+        # Threshold check with updated 0.64
+        if not matches or max(scores) < 0.64:
             print("⚠️ No strong context found. Using fallback response.")
             fallback_prompt = f"""
             You are Lord Krishna, responding to a seeker with divine grace and wisdom.
