@@ -36,6 +36,7 @@ def keep_alive():
     now = request.args.get("now", "Yes")
     return jsonify({"response": f"I am awake at {now}. You asked: {query}"})
 
+
 # ==== MAIN QA ENDPOINT ====
 @app.route("/ask", methods=["POST"])
 def ask():
@@ -59,32 +60,8 @@ def ask():
         matches = res.get("matches", [])
         print(f"🔍 Retrieved {len(matches)} relevant context from Pinecone.")
 
-        # Step 3: Ask Gemini if it's a relevant question to Geeta
-        eligibility_prompt = f"""
-        Decide if this question is appropriate for being answered through the teachings and tone of the Bhagavad Gita.
-
-        Answer YES if the question is:
-        - about real-life dilemmas, like fear, anger, purpose, karma, peace, ego, or emotions
-        - something Arjuna might have asked Krishna
-        - a spiritually reflective or dharmic query
-
-        Answer NO if it is:
-        - a factual, political, or non-spiritual question (like "Who is the President?" or "What is 2+2?")
-
-        Respond only with "YES" or "NO" — no explanation.
-
-        Question: {question}
-        """
-
-        eligibility_chat = chat_model.start_chat()
-        eligibility_response = eligibility_chat.send_message(eligibility_prompt)
-        decision = eligibility_response.text.strip().upper()
-
-        if decision == "NO" or not matches or max(m["score"] for m in matches) < 0.75:
-            print("LLM said: NO")
-            print("Not strongly related to Geeta or insufficient context. Using fallback response.")
-            print("User question -", question)
-
+        if not matches or max(m["score"] for m in matches) < 0.75:
+            print("⚠️ No strong context found. Using fallback response.")
             fallback_prompt = f"""
             You are Lord Krishna, responding to a seeker with divine grace and wisdom.
             Answer their question with empathy, spiritual insight, and practical guidance.
@@ -94,14 +71,10 @@ def ask():
             """
             fallback_chat = chat_model.start_chat()
             fallback_reply = fallback_chat.send_message(fallback_prompt)
-
             print("LLM response -\n", fallback_reply.text)
             return jsonify({"response": fallback_reply.text})
 
-        print("LLM said: YES")
-        print("User question -", question)
-
-        # Step 4: Build context
+        # Step 3: Build context from matched verses
         verses = []
         for match in matches:
             meta = match["metadata"]
@@ -114,37 +87,38 @@ def ask():
 
             verses.append(f"""## 📖 Chapter {chapter}, Verse {verse_no}
 
-        **Shloka (Sanskrit):**
+**Shloka (Sanskrit):**
 
-        > _{sanskrit}_
+> _{sanskrit}_
 
-        **Meaning:**
+**Meaning:**
 
-        {translated}
-        """)
+{translated}
+""")
 
         context = "\n\n".join(verses)
 
+        # Step 4: Ask Gemini with context
         system_prompt = f"""
-        You are the **Bhagavad Gita**, the divine guide filled with timeless wisdom. When a seeker asks a question, respond as Lord Krishna would — with calm, clarity, and compassion. Your voice is serene, saintly, and filled with light.
+You are the **Bhagavad Gita**, the divine guide filled with timeless wisdom. When a seeker asks a question, respond as Lord Krishna would — with calm, clarity, and compassion. Your voice is serene, saintly, and filled with light.
 
-        Respond in {'Hindi' if lang == 'hi' else 'English'} using Markdown formatting:
-        - Use `#` for titles, `##` for sections
-        - Use **bold** for emphasis
-        - Display Sanskrit Shlokas in italics or blockquote format to make them stand out
-        - Start your response with a **thematic heading** (like *Devotion and Surrender* or *Balance in Action*) based on the core idea of the response
-        - Always ground your answer in the verses provided
+Respond in {'Hindi' if lang == 'hi' else 'English'} using Markdown formatting:
+- Use `#` for titles, `##` for sections
+- Use **bold** for emphasis
+- Display Sanskrit Shlokas in italics or blockquote format to make them stand out
+- Start your response with a **thematic heading** (like *Devotion and Surrender* or *Balance in Action*) based on the core idea of the response
+- Always ground your answer in the verses provided
 
-        Here are the verses to meditate upon:
+Here are the verses to meditate upon:
 
-        {context}
+{context}
 
-        Now, humbly and gracefully respond to this question:
+Now, humbly and gracefully respond to this question:
 
-        **{question}**
+**{question}**
 
-        🕉️ End with a closing thought from the Gita if it feels appropriate.
-        """
+🕉️ End with a closing thought from the Gita if it feels appropriate.
+"""
 
         chat = chat_model.start_chat()
         reply = chat.send_message(
@@ -162,6 +136,7 @@ def ask():
     except Exception as e:
         print(f"❌ Error: {e}")
         return jsonify({"error": str(e)}), 500
+
 
 # ==== START SERVER ====
 if __name__ == "__main__":
