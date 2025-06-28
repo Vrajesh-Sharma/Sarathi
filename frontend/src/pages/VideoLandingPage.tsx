@@ -7,21 +7,15 @@ const VideoLandingPage: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const navigate = useNavigate();
-  const [isAudioMuted, setIsAudioMuted] = useState(true); // Default: audio muted
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
 
   useEffect(() => {
     const video = videoRef.current;
-    const audio = audioRef.current;
 
     if (video) {
-      video.muted = true; // Always muted
+      video.muted = true;
       video.volume = 0;
-      video.play().catch((err) => console.warn("🎥 Video play error:", err));
-    }
-
-    if (audio) {
-      audio.muted = true;
-      audio.volume = 0.5;
+      video.play().catch((err) => console.warn("🎥 Video autoplay error:", err));
     }
 
     return () => {
@@ -29,6 +23,7 @@ const VideoLandingPage: React.FC = () => {
         video.pause();
         video.currentTime = 0;
       }
+      const audio = audioRef.current;
       if (audio) {
         audio.pause();
         audio.currentTime = 0;
@@ -36,38 +31,38 @@ const VideoLandingPage: React.FC = () => {
     };
   }, []);
 
-  const toggleAudio = () => {
+  const handleToggleAudio = async () => {
     const audio = audioRef.current;
-    if (audio) {
-      if (audio.muted) {
-        audio.muted = false;
-        audio.play().catch((err) =>
-          console.warn("🎵 Audio play error:", err)
-        );
-        setIsAudioMuted(false);
-      } else {
-        audio.muted = true;
-        setIsAudioMuted(true);
+    const video = videoRef.current;
+
+    if (!audio || !video) return;
+
+    if (!isAudioPlaying) {
+      try {
+        audio.currentTime = video.currentTime;
+        audio.volume = 0.5;
+        await audio.play();
+        setIsAudioPlaying(true);
+      } catch (err) {
+        console.error("🔇 Failed to play audio:", err);
       }
+    } else {
+      audio.pause();
+      setIsAudioPlaying(false);
     }
   };
 
   const handleChatWithKrishna = () => {
-    const video = videoRef.current;
-    const audio = audioRef.current;
-
-    video?.pause();
-    audio?.pause();
-    if (video) video.currentTime = 0;
-    if (audio) audio.currentTime = 0;
+    videoRef.current?.pause();
+    audioRef.current?.pause();
+    if (videoRef.current) videoRef.current.currentTime = 0;
+    if (audioRef.current) audioRef.current.currentTime = 0;
 
     fetch('https://sarathi-ai.onrender.com/keep-alive', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query: 'Are you awake?' }),
-    }).catch((err) => {
-      console.warn('Keep-alive ping failed:', err);
-    });
+    }).catch((err) => console.warn('Keep-alive ping failed:', err));
 
     navigate('/ask-krishna');
   };
@@ -86,8 +81,8 @@ const VideoLandingPage: React.FC = () => {
         <source src="/krishna-video.mp4" type="video/mp4" />
       </video>
 
-      {/* 🎵 Background Audio */}
-      <audio ref={audioRef} loop preload="auto">
+      {/* 🎵 Audio */}
+      <audio ref={audioRef} preload="auto" loop>
         <source src="/krishna-audio.mp3" type="audio/mp3" />
       </audio>
 
@@ -95,7 +90,7 @@ const VideoLandingPage: React.FC = () => {
       <div className="absolute inset-0 bg-black/40"></div>
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30"></div>
 
-      {/* ✨ Sacred particles */}
+      {/* ✨ Particles */}
       <div className="absolute inset-0 pointer-events-none">
         {[...Array(15)].map((_, i) => (
           <motion.div
@@ -120,7 +115,7 @@ const VideoLandingPage: React.FC = () => {
         ))}
       </div>
 
-      {/* 🕉️ Main Content */}
+      {/* 🔱 Main Content */}
       <div className="relative z-10 min-h-screen flex flex-col items-center justify-end px-6 pb-7">
         <motion.div
           initial={{ opacity: 0, y: 50 }}
@@ -190,20 +185,19 @@ const VideoLandingPage: React.FC = () => {
           </motion.div>
         </motion.div>
 
-        {/* 🎛️ Audio Toggle Button */}
+        {/* 🎛 Audio Button */}
         <div className="absolute bottom-8 left-8 z-20">
           <button
-            onClick={toggleAudio}
+            onClick={handleToggleAudio}
             className="flex items-center gap-2 px-4 py-2 bg-black/40 backdrop-blur-sm text-white text-sm rounded-full border border-white/20 hover:bg-black/60 transition"
           >
-            {isAudioMuted ? "🔊 Unmute Audio" : "🔇 Mute Audio"}
+            {isAudioPlaying ? "🔇 Mute Audio" : "🔊 Unmute Audio"}
           </button>
         </div>
 
-        {/* Volume Hint */}
         <div className="absolute bottom-8 right-8">
           <p className="text-white/60 text-xs font-inter">
-            🎧 Adjust your volume for a divine experience
+            🎧 Adjust your volume for the best experience
           </p>
         </div>
       </div>
