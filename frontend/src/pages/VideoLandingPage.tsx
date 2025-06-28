@@ -5,23 +5,23 @@ import { Sparkles } from 'lucide-react';
 
 const VideoLandingPage: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const navigate = useNavigate();
-  const [isMuted, setIsMuted] = useState(true);
+  const [isAudioMuted, setIsAudioMuted] = useState(true); // Default: audio muted
 
   useEffect(() => {
     const video = videoRef.current;
-    if (video) {
-      video.volume = 0.5;
-      const playPromise = video.play();
+    const audio = audioRef.current;
 
-      if (playPromise !== undefined) {
-        playPromise.catch((error) => {
-          console.warn("🔇 Autoplay failed, muting video.");
-          video.muted = true;
-          video.play();
-          setIsMuted(true);
-        });
-      }
+    if (video) {
+      video.muted = true; // Always muted
+      video.volume = 0;
+      video.play().catch((err) => console.warn("🎥 Video play error:", err));
+    }
+
+    if (audio) {
+      audio.muted = true;
+      audio.volume = 0.5;
     }
 
     return () => {
@@ -29,17 +29,38 @@ const VideoLandingPage: React.FC = () => {
         video.pause();
         video.currentTime = 0;
       }
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
     };
   }, []);
 
+  const toggleAudio = () => {
+    const audio = audioRef.current;
+    if (audio) {
+      if (audio.muted) {
+        audio.muted = false;
+        audio.play().catch((err) =>
+          console.warn("🎵 Audio play error:", err)
+        );
+        setIsAudioMuted(false);
+      } else {
+        audio.muted = true;
+        setIsAudioMuted(true);
+      }
+    }
+  };
+
   const handleChatWithKrishna = () => {
     const video = videoRef.current;
-    if (video) {
-      video.pause();
-      video.currentTime = 0;
-    }
-  
-    // Fire keep-alive ping in background
+    const audio = audioRef.current;
+
+    video?.pause();
+    audio?.pause();
+    if (video) video.currentTime = 0;
+    if (audio) audio.currentTime = 0;
+
     fetch('https://sarathi-ai.onrender.com/keep-alive', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -47,31 +68,34 @@ const VideoLandingPage: React.FC = () => {
     }).catch((err) => {
       console.warn('Keep-alive ping failed:', err);
     });
-  
-    // Redirect to chat page
+
     navigate('/ask-krishna');
   };
-  
 
   return (
     <div className="relative min-h-screen overflow-hidden">
-      {/* Background Video */}
+      {/* 🎥 Background Video */}
       <video
         ref={videoRef}
         className="absolute inset-0 w-full h-full object-cover"
         loop
-        muted={false}
+        muted
         playsInline
         preload="auto"
       >
         <source src="/krishna-video.mp4" type="video/mp4" />
       </video>
 
+      {/* 🎵 Background Audio */}
+      <audio ref={audioRef} loop preload="auto">
+        <source src="/krishna-audio.mp3" type="audio/mp3" />
+      </audio>
+
       {/* Overlays */}
       <div className="absolute inset-0 bg-black/40"></div>
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30"></div>
 
-      {/* Sacred particles overlay */}
+      {/* ✨ Sacred particles */}
       <div className="absolute inset-0 pointer-events-none">
         {[...Array(15)].map((_, i) => (
           <motion.div
@@ -96,7 +120,7 @@ const VideoLandingPage: React.FC = () => {
         ))}
       </div>
 
-      {/* Main Content */}
+      {/* 🕉️ Main Content */}
       <div className="relative z-10 min-h-screen flex flex-col items-center justify-end px-6 pb-7">
         <motion.div
           initial={{ opacity: 0, y: 50 }}
@@ -166,38 +190,20 @@ const VideoLandingPage: React.FC = () => {
           </motion.div>
         </motion.div>
 
-        {/* Audio Control Toggle */}
-        {isMuted ? (
-          <div className="absolute bottom-8 left-8 z-20">
-            <button
-              onClick={() => {
-                const video = videoRef.current;
-                if (video) {
-                  video.muted = false;
-                  video.volume = 0.5;
-                  video.play();
-                  setIsMuted(false);
-                }
-              }}
-              className="flex items-center gap-2 px-4 py-2 bg-black/40 backdrop-blur-sm text-white text-sm rounded-full border border-white/20 hover:bg-black/60 transition"
-            >
-              🔊 Enable Sound
-            </button>
-          </div>
-        ) : (
-          <div className="absolute bottom-8 left-8 z-20">
-            <div className="flex items-center gap-2 px-4 py-2 bg-black/30 backdrop-blur-sm rounded-full border border-white/20">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span className="text-white text-sm font-inter opacity-80">Audio Enabled</span>
-            </div>
-          </div>
-        )}
-
+        {/* 🎛️ Audio Toggle Button */}
+        <div className="absolute bottom-8 left-8 z-20">
+          <button
+            onClick={toggleAudio}
+            className="flex items-center gap-2 px-4 py-2 bg-black/40 backdrop-blur-sm text-white text-sm rounded-full border border-white/20 hover:bg-black/60 transition"
+          >
+            {isAudioMuted ? "🔊 Unmute Audio" : "🔇 Mute Audio"}
+          </button>
+        </div>
 
         {/* Volume Hint */}
         <div className="absolute bottom-8 right-8">
           <p className="text-white/60 text-xs font-inter">
-            🔊 Adjust your volume for the best experience
+            🎧 Adjust your volume for a divine experience
           </p>
         </div>
       </div>
