@@ -25,7 +25,7 @@ print("✅ Pinecone connected and index loaded.")
 
 print("🔗 Connecting to Gemini...")
 genai.configure(api_key=GEMINI_API_KEY)
-chat_model = genai.GenerativeModel("gemini-1.5-flash")
+chat_model = genai.GenerativeModel("gemini-2.5-flash")
 print("✅ Gemini connected and model initialized.")
 
 # ==== HEALTH CHECK ENDPOINT ====
@@ -50,7 +50,7 @@ def ask():
     try:
         # Step 1: Embed question
         query_embedding = genai.embed_content(
-            model="models/embedding-001",
+            model="models/text-embedding-004",
             content=question,
             task_type="retrieval_query"
         )["embedding"]
