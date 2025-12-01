@@ -1,63 +1,50 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Volume2, VolumeX } from 'lucide-react';
 
 const VideoLandingPage: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
   const navigate = useNavigate();
-  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  // State to track if the video is currently muted (default: true)
+  const [isMuted, setIsMuted] = useState(true);
 
   useEffect(() => {
     const video = videoRef.current;
 
     if (video) {
+      // 1. Ensure video is muted initially so autoplay works
       video.muted = true;
-      video.volume = 0;
       video.play().catch((err) => console.warn("🎥 Video autoplay error:", err));
     }
 
     return () => {
+      // Cleanup on unmount
       if (video) {
         video.pause();
         video.currentTime = 0;
       }
-      const audio = audioRef.current;
-      if (audio) {
-        audio.pause();
-        audio.currentTime = 0;
-      }
     };
   }, []);
 
-  const handleToggleAudio = async () => {
-    const audio = audioRef.current;
+  const handleToggleMute = () => {
     const video = videoRef.current;
+    if (!video) return;
 
-    if (!audio || !video) return;
-
-    if (!isAudioPlaying) {
-      try {
-        audio.currentTime = video.currentTime;
-        audio.volume = 0.5;
-        await audio.play();
-        setIsAudioPlaying(true);
-      } catch (err) {
-        console.error("🔇 Failed to play audio:", err);
-      }
-    } else {
-      audio.pause();
-      setIsAudioPlaying(false);
-    }
+    // 2. Simply toggle the video's muted state. 
+    // No separate audio file is played.
+    video.muted = !video.muted;
+    setIsMuted(video.muted);
   };
 
   const handleChatWithKrishna = () => {
-    videoRef.current?.pause();
-    audioRef.current?.pause();
-    if (videoRef.current) videoRef.current.currentTime = 0;
-    if (audioRef.current) audioRef.current.currentTime = 0;
+    // Pause video before navigating away
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+    }
 
+    // Ping your backend
     fetch('https://sarathi-ai.onrender.com/keep-alive', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -70,21 +57,19 @@ const VideoLandingPage: React.FC = () => {
   return (
     <div className="relative min-h-screen overflow-hidden">
       {/* 🎥 Background Video */}
+      {/* The audio comes from this file itself. We toggle 'muted' to control it. */}
       <video
         ref={videoRef}
         className="absolute inset-0 w-full h-full object-cover"
         loop
-        muted
+        muted={true} 
         playsInline
         preload="auto"
       >
         <source src="/krishna-video.mp4" type="video/mp4" />
       </video>
 
-      {/* 🎵 Audio */}
-      <audio ref={audioRef} preload="auto" loop>
-        <source src="/krishna-audio.mp3" type="audio/mp3" />
-      </audio>
+      {/* Note: The separate <audio> tag has been removed entirely */}
 
       {/* Overlays */}
       <div className="absolute inset-0 bg-black/40"></div>
@@ -188,10 +173,20 @@ const VideoLandingPage: React.FC = () => {
         {/* 🎛 Audio Button */}
         <div className="absolute bottom-8 left-8 z-20">
           <button
-            onClick={handleToggleAudio}
+            onClick={handleToggleMute}
             className="flex items-center gap-2 px-4 py-2 bg-black/40 backdrop-blur-sm text-white text-sm rounded-full border border-white/20 hover:bg-black/60 transition"
           >
-            {isAudioPlaying ? "🔇 Mute Audio" : "🔊 Unmute Audio"}
+            {isMuted ? (
+               <>
+               <VolumeX className="w-5 h-5 group-hover:scale-110 transition-transform" /> 
+               <span>Unmute Video</span>
+             </>
+            ) : (
+                <>
+                <Volume2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                <span>Mute Video</span>
+              </>
+            )}
           </button>
         </div>
 
