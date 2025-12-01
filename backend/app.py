@@ -65,8 +65,8 @@ def ask():
         scores = [round(m["score"], 4) for m in matches]
         print(f"📊 Scores: {', '.join(map(str, scores))}")
 
-        # Threshold check with updated 0.615
-        if not matches or max(scores) < 0.615:
+        # Threshold check with updated 0.5
+        if not matches or max(scores) < 0.5:
             print("⚠️ No strong context found. Using fallback response.")
             fallback_prompt = f"""
             You are Lord Krishna, responding to a seeker with divine grace and wisdom.
