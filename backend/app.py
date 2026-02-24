@@ -50,7 +50,7 @@ def ask():
     try:
         # Step 1: Embed question
         query_embedding = genai.embed_content(
-            model="models/text-embedding-004",
+            model="models/text-embedding-001",
             content=question,
             task_type="retrieval_query"
         )["embedding"]
