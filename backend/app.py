@@ -1,21 +1,26 @@
 from flask import Flask, request, jsonify
 from pinecone import Pinecone
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 import os
 from dotenv import load_dotenv
 from flask_cors import CORS
 
+
 # ==== LOAD ENV ====
 load_dotenv()
+
 
 # ==== CONFIGURATION ====
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 INDEX_NAME = os.getenv("INDEX_NAME")
 
+
 # ==== INIT APP ====
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
+
 
 # ==== INIT SERVICES ====
 print("🔗 Connecting to Pinecone...")
@@ -24,9 +29,61 @@ index = pc.Index(INDEX_NAME)
 print("✅ Pinecone connected and index loaded.")
 
 print("🔗 Connecting to Gemini...")
-genai.configure(api_key=GEMINI_API_KEY)
-chat_model = genai.GenerativeModel("gemini-2.5-flash")
-print("✅ Gemini connected and model initialized.")
+client = genai.Client(api_key=GEMINI_API_KEY)
+print("✅ Gemini GenAI client initialized.")
+
+
+# ==== QUERY EXPANSION ====
+def expand_query(question: str, lang: str) -> str:
+    """
+    Rewrites the user's question into a spiritually-rich query
+    to improve Pinecone retrieval scores.
+    """
+    prompt = f"""
+You are a Bhagavad Gita scholar. Rewrite the following question into a
+spiritual search query using Gita-relevant keywords (e.g., duty, mind, 
+attachment, fear, action, surrender, self, devotion, knowledge).
+Keep it under 20 words. Return ONLY the rewritten query, nothing else.
+
+Question: {question}
+Rewritten Query:"""
+    try:
+        result = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt
+        )
+        expanded = result.text.strip()
+        print(f"🔄 Expanded query: {expanded}")
+        return expanded
+    except Exception as e:
+        print(f"⚠️ Query expansion failed, using original: {e}")
+        return question
+
+
+def classify_question_depth(question: str) -> str:
+    """
+    Classifies the question as 'brief', 'moderate', or 'detailed'
+    so the LLM knows how long to respond.
+    """
+    brief_keywords = [
+        "what is", "who is", "define", "meaning of", "which chapter",
+        "how many", "name", "list", "verse number"
+    ]
+    detailed_keywords = [
+        "explain", "elaborate", "in detail", "describe", "how does",
+        "why does", "tell me about", "what does gita say about",
+        "heal", "help me understand", "guide me"
+    ]
+
+    q_lower = question.lower()
+
+    if any(kw in q_lower for kw in brief_keywords):
+        return "brief"
+    elif any(kw in q_lower for kw in detailed_keywords):
+        return "detailed"
+    else:
+        return "moderate"
+
 
 # ==== HEALTH CHECK ENDPOINT ====
 @app.route("/keep-alive", methods=["POST"])
@@ -48,92 +105,114 @@ def ask():
         return jsonify({"error": "No question provided."}), 400
 
     try:
-        # Step 1: Embed question
-        query_embedding = genai.embed_content(
-            model="models/text-embedding-001",
-            content=question,
-            task_type="retrieval_query"
-        )["embedding"]
+        # Step 1: Classify question depth
+        depth = classify_question_depth(question)
+        print(f"📏 Question depth: {depth}")
 
-        # Step 2: Query Pinecone
-        res = index.query(vector=query_embedding, top_k=5, include_metadata=True)
+        # Step 2: Expand query for better retrieval
+        search_query = expand_query(question, lang)
+
+        # Step 3: Embed expanded query
+        embed_result = client.models.embed_content(
+            model="gemini-embedding-001",
+            contents=search_query,
+            config=types.EmbedContentConfig(task_type="RETRIEVAL_QUERY")
+        )
+        query_embedding = embed_result.embeddings[0].values
+
+        # Step 4: Query Pinecone
+        # Use top_k=3 for brief, top_k=5 for moderate/detailed
+        top_k = 3 if depth == "brief" else 5
+        res = index.query(vector=query_embedding, top_k=top_k, include_metadata=True)
         matches = res.get("matches", [])
-        print(f"🧠 User Question: {question}")
-        print(f"🔍 Retrieved {len(matches)} relevant context from Pinecone.")
 
-        # Print similarity scores
+        print(f"🧠 User Question: {question}")
+        print(f"🔍 Retrieved {len(matches)} relevant contexts from Pinecone.")
         scores = [round(m["score"], 4) for m in matches]
         print(f"📊 Scores: {', '.join(map(str, scores))}")
 
-        # Threshold check with updated 0.5
-        if not matches or max(scores) < 0.5:
+        # Step 5: Threshold check — use only matches above 0.55
+        strong_matches = [m for m in matches if m["score"] >= 0.55]
+
+        if not strong_matches:
             print("⚠️ No strong context found. Using fallback response.")
             fallback_prompt = f"""
-            You are Lord Krishna, responding to a seeker with divine grace and wisdom.
-            Answer their question with empathy, spiritual insight, and practical guidance.
-            Respond in {'Hindi' if lang == 'hi' else 'English'}.
+You are Lord Krishna from the Bhagavad Gita, responding with divine wisdom.
+Answer this question directly and concisely in {'Hindi' if lang == 'hi' else 'English'}.
+Be warm but brief — 2 to 4 sentences max unless the question demands more depth.
 
-            Question: {question}
-            """
-            fallback_chat = chat_model.start_chat()
-            fallback_reply = fallback_chat.send_message(fallback_prompt)
-            print("LLM response -\n", fallback_reply.text)
+Question: {question}
+"""
+            fallback_reply = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=fallback_prompt
+            )
+            print("LLM fallback response -\n", fallback_reply.text)
             return jsonify({"response": fallback_reply.text})
 
-        # Step 3: Build context from matched verses
+        # Step 6: Build verse context
         verses = []
-        for match in matches:
+        for match in strong_matches:
             meta = match["metadata"]
             chapter = meta.get("chapter_number", "N/A")
             verse_no = meta.get("verse", "N/A")
             sanskrit = meta.get("sanskrit", "")
-            english = match["values"]
+            english = meta.get("english", "")
             hindi = meta.get("hindi", "")
             translated = hindi if lang == "hi" else english
 
-            verses.append(f"""## 📖 Chapter {chapter}, Verse {verse_no}
-
-**Shloka (Sanskrit):**
-
-> _{sanskrit}_
-
-**Meaning:**
-
-{translated}
-""")
+            verses.append(f"📖 {chapter}, Verse {verse_no}\n> _{sanskrit}_\n**Meaning:** {translated}")
 
         context = "\n\n".join(verses)
 
-        # Step 4: Ask Gemini with context
+        # Step 7: Response length instructions based on depth
+        length_instruction = {
+            "brief": (
+                "Give a SHORT, direct answer — 2 to 4 sentences max. "
+                "Quote ONE verse only if directly relevant. No long explanations."
+            ),
+            "moderate": (
+                "Give a FOCUSED answer — 1 short paragraph + 1 or 2 relevant verses. "
+                "Stay on point. Don't over-explain."
+            ),
+            "detailed": (
+                "Give a THOROUGH response with compassion and depth. "
+                "Use 2 to 3 verses. Explain each verse's relevance to the question. "
+                "Offer practical spiritual guidance."
+            )
+        }[depth]
+
+        # Step 8: Final prompt
         system_prompt = f"""
-You are the **Bhagavad Gita**, the divine guide filled with timeless wisdom. When a seeker asks a question, respond as Lord Krishna would — with calm, clarity, and compassion. Your voice is serene, saintly, and filled with light.
+You are Lord Krishna from the Bhagavad Gita, responding to a seeker with calm wisdom.
+Respond in {'Hindi' if lang == 'hi' else 'English'} using Markdown.
 
-Respond in {'Hindi' if lang == 'hi' else 'English'} using Markdown formatting:
-- Use `#` for titles, `##` for sections
-- Use **bold** for emphasis
-- Display Sanskrit Shlokas in italics or blockquote format to make them stand out
-- Start your response with a **thematic heading** (like *Devotion and Surrender* or *Balance in Action*) based on the core idea of the response
-- Always ground your answer in the verses provided
+**Response Length Rule:** {length_instruction}
 
-Here are the verses to meditate upon:
+**Strict Rules:**
+- Answer the EXACT question asked. Don't go off on tangents.
+- Only use the verses provided below. Don't invent or paraphrase other verses.
+- If a verse isn't directly relevant to the question, don't include it.
+- Sanskrit shloka in blockquote (`>`), meaning in plain text below it.
+- Do NOT start with lengthy introductions. Get to the point.
+- End with ONE closing line — brief and meaningful.
 
+**Relevant Verses from the Gita:**
 {context}
 
-Now, humbly and gracefully respond to this question:
+**Seeker's Question:** {question}
 
-**{question}**
-
-🕉️ End with a closing thought from the Gita if it feels appropriate.
+Lord Krishna's Response:
 """
 
-        chat = chat_model.start_chat()
-        reply = chat.send_message(
-            system_prompt,
-            generation_config={
-                "temperature": 0.5,
-                "top_p": 0.8,
-                "top_k": 5
-            }
+        reply = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=system_prompt,
+            config=types.GenerateContentConfig(
+                temperature=0.4,
+                top_p=0.85,
+                top_k=10
+            )
         )
 
         print("LLM response -\n", reply.text)
