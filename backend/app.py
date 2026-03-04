@@ -131,8 +131,8 @@ def ask():
         scores = [round(m["score"], 4) for m in matches]
         print(f"📊 Scores: {', '.join(map(str, scores))}")
 
-        # Step 5: Threshold check — use only matches above 0.55
-        strong_matches = [m for m in matches if m["score"] >= 0.55]
+        # Step 5: Threshold check — use only matches above 0.5
+        strong_matches = [m for m in matches if m["score"] >= 0.5]
 
         if not strong_matches:
             print("⚠️ No strong context found. Using fallback response.")
